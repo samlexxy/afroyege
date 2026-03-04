@@ -1,0 +1,12 @@
+{# Returned by hx-get="{% url 'orders:add_item_row' %}" — appended to #items-container #}
+<div class="flex items-center gap-2 item-row">
+  <input type="text" name="item_name[]" placeholder="e.g. Free range eggs (6 pack)"
+         class="flex-1 bg-white border-2 border-sand rounded-xl px-4 py-2.5 text-sm text-brand placeholder-brand-muted/50 focus:outline-none focus:border-gold transition">
+  <input type="text" name="item_qty[]" placeholder="Qty" value="1"
+         class="w-16 bg-white border-2 border-sand rounded-xl px-3 py-2.5 text-sm text-brand focus:outline-none focus:border-gold transition text-center">
+  <button type="button"
+          onclick="this.closest('.item-row').remove()"
+          class="w-8 h-8 rounded-lg border-2 border-red-200 text-red-400 hover:bg-red-50 hover:border-red-300 transition flex items-center justify-center font-bold shrink-0">
+    ×
+  </button>
+</div>

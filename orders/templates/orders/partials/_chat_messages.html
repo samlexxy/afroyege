@@ -1,0 +1,17 @@
+{% for msg in messages %}
+  <div class="flex flex-col {% if msg.sender == request.user %}items-end{% else %}items-start{% endif %}">
+    <span class="text-xs font-semibold uppercase tracking-wider mb-1
+                 {% if msg.sender == request.user %}text-blue-600{% else %}text-gold-dim{% endif %}">
+      {% if msg.sender == request.user %}You{% else %}Runner{% endif %}
+    </span>
+    <div class="max-w-[80%] px-3 py-2 rounded-2xl text-sm
+                {% if msg.sender == request.user %}bg-blue-100 text-brand rounded-br-sm{% else %}bg-gold-faint text-brand rounded-bl-sm border border-gold/20{% endif %}">
+      {{ msg.content }}
+    </div>
+    <span class="text-xs text-brand-muted/50 mt-1">{{ msg.created_at|time:"g:ia" }}</span>
+  </div>
+{% empty %}
+  <div class="flex-1 flex items-center justify-center text-brand-muted/40 text-sm">
+    No messages yet — say hi to your runner!
+  </div>
+{% endfor %}

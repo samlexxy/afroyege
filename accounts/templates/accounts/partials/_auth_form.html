@@ -1,0 +1,150 @@
+
+
+<form
+  id="{{ form_id|default:'auth-form' }}"
+  method="POST"
+  action="{{ form_action }}"
+  hx-post="{{ form_action }}"
+  hx-target="#{{ form_id|default:'auth-form' }}"
+  hx-swap="outerHTML"
+  hx-indicator="#{{ form_id|default:'auth-form' }}-spinner"
+  novalidate
+  class="space-y-4"
+>
+  {% csrf_token %}
+
+
+  {% if form.non_field_errors %}
+    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-start gap-2">
+      <span class="shrink-0 mt-px">❌</span>
+      <div>
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {# ── Form fields — rendered field by field for styling control ── #}
+  {% for field in form %}
+    {% if not field.is_hidden %}
+    <div class="space-y-1">
+      <label for="{{ field.id_for_label }}"
+             class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">
+        {{ field.label }}{% if field.field.required %}<span class="text-gold ml-0.5">*</span>{% endif %}
+      </label>
+
+      <div class="relative">
+        {{ field }}
+
+        {# Field error icon #}
+        {% if field.errors %}
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 text-sm pointer-events-none">⚠</span>
+        {% endif %}
+      </div>
+
+      {# Field-level errors #}
+      {% if field.errors %}
+        <ul class="space-y-0.5">
+          {% for error in field.errors %}
+            <li class="text-xs text-red-600 flex items-center gap-1">
+              <span>·</span> {{ error }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {# Help text #}
+      {% if field.help_text %}
+        <p class="text-xs text-brand-muted/70">{{ field.help_text }}</p>
+      {% endif %}
+    </div>
+    {% else %}
+      {{ field }} {# render hidden fields silently #}
+    {% endif %}
+  {% endfor %}
+
+  {# ── Login extras ── #}
+  {% if is_login %}
+    <div class="flex items-center justify-between text-sm">
+      <label class="flex items-center gap-2 cursor-pointer text-brand-muted">
+        <input type="checkbox" name="remember_me" class="accent-gold rounded" />
+        Remember me
+      </label>
+      <a href="{% url 'password_reset' %}"
+         class="text-gold-dim hover:text-gold transition font-medium">
+        Forgot password?
+      </a>
+    </div>
+  {% endif %}
+
+  {# ── Account type selector (signup only) ── #}
+  {% if is_signup %}
+    <div class="space-y-2">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">
+        Account Type <span class="text-gold">*</span>
+      </label>
+      <div class="grid grid-cols-2 gap-3" id="account-type-selector">
+        <label class="cursor-pointer">
+          <input type="radio" name="account_type" value="customer"
+                 class="peer sr-only" checked
+                 onchange="document.getElementById('runner-note').classList.add('hidden')">
+          <div class="peer-checked:border-gold peer-checked:bg-gold-faint border-2 border-sand rounded-xl p-4 text-center transition hover:border-gold/50">
+            <div class="text-2xl mb-1">🛒</div>
+            <div class="font-syne font-bold text-sm">Customer</div>
+            <div class="text-xs text-brand-muted mt-0.5">Request errands</div>
+          </div>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="account_type" value="runner"
+                 class="peer sr-only"
+                 onchange="document.getElementById('runner-note').classList.remove('hidden')">
+          <div class="peer-checked:border-gold peer-checked:bg-gold-faint border-2 border-sand rounded-xl p-4 text-center transition hover:border-gold/50">
+            <div class="text-2xl mb-1">🏃</div>
+            <div class="font-syne font-bold text-sm">Runner</div>
+            <div class="text-xs text-brand-muted mt-0.5">Errand Shopper</div>
+          </div>
+        </label>
+      </div>
+      <p id="runner-note" class="hidden text-xs text-brand-muted bg-gold-faint border border-gold/30 rounded-lg px-3 py-2">
+        ℹ️ Runners will complete identity and payment verification after signup.
+      </p>
+    </div>
+
+    {# Terms agreement #}
+    <label class="flex items-start gap-3 cursor-pointer text-sm text-brand-muted bg-cream-soft rounded-xl p-3 border border-sand">
+      <input type="checkbox" name="agree_terms" required
+             class="accent-gold mt-0.5 rounded shrink-0" />
+
+    </label>
+  {% endif %}
+
+  {# ── Submit button + spinner ── #}
+  <button
+    type="submit"
+    class="
+      w-full bg-gold text-brand font-syne font-bold text-base
+      py-3.5 rounded-xl hover:bg-gold-dim active:scale-[0.99]
+      transition flex items-center justify-center gap-2
+      disabled:opacity-60 disabled:cursor-not-allowed
+    "
+  >
+    {# HTMX loading indicator #}
+    <span id="{{ form_id|default:'auth-form' }}-spinner"
+          class="htmx-indicator">
+      <svg class="animate-spin h-4 w-4 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </span>
+    <span>{{ submit_label|default:"Submit" }}</span>
+  </button>
+
+</form>
+
+{# HTMX indicator base style #}
+<style>
+  .htmx-indicator { display: none; }
+  .htmx-request .htmx-indicator { display: inline-flex; }
+  .htmx-request[type="submit"] { opacity: 0.7; pointer-events: none; }
+</style>

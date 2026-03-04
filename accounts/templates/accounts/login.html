@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{# ── Hide topbar and footer on auth pages for clean full-screen layout ── #}
+{% block topbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block main_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#F0E8D8] flex flex-col md:flex-row">
+
+  <div class="hidden md:flex md:w-5/12 lg:w-1/2 bg-brand flex-col justify-between p-10 relative overflow-hidden shrink-0">
+
+    {# Decorative blobs #}
+    <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-gold/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-gold/5 blur-2xl pointer-events-none"></div>
+
+    {# Logo #}
+    <a href="{% url 'home' %}" class="font-syne font-extrabold text-2xl text-gold relative z-10">
+      AfroYege
+    </a>
+
+    {# Central copy #}
+    <div class="relative z-10">
+      <h2 class="font-syne font-extrabold text-4xl text-white leading-tight mb-4">
+        Your errands,<br>handled with<br>
+        <span class="text-gold">trust.</span>
+      </h2>
+      <p class="text-white/55 text-base max-w-xs">
+        Spending limits protected. Receipt verified purchases. Secure payments every time.
+      </p>
+
+      {# Trust indicators #}
+      <div class="mt-8 space-y-3">
+        {% for item in trust_items %}
+        <div class="flex items-center gap-3 text-white/70 text-sm">
+          <span class="text-gold">✓</span> {{ item }}
+        </div>
+        {% empty %}
+        <div class="flex items-center gap-3 text-white/70 text-sm"><span class="text-gold">✓</span> Spending limits on every order</div>
+        <div class="flex items-center gap-3 text-white/70 text-sm"><span class="text-gold">✓</span> Receipt & photo proof required</div>
+        <div class="flex items-center gap-3 text-white/70 text-sm"><span class="text-gold">✓</span> Payment held securely until confirmed</div>
+        <div class="flex items-center gap-3 text-white/70 text-sm"><span class="text-gold">✓</span> Verified runners only</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Bottom tagline #}
+    <p class="text-white/25 text-xs relative z-10">© {% now "Y" %} AfroYege</p>
+  </div>
+
+  <div class="flex-1 flex items-center justify-center p-6 md:p-12">
+    <div class="w-full max-w-md">
+
+      {# Mobile logo #}
+      <a href="{% url 'home' %}" class="md:hidden block font-syne font-extrabold text-2xl text-gold mb-8">
+        AfroYege
+      </a>
+
+      {# Heading #}
+      <div class="mb-8">
+        <h1 class="font-syne font-extrabold text-3xl text-brand mb-1">Welcome back</h1>
+        <p class="text-brand-muted">Sign in to your account</p>
+      </div>
+
+        {% include "accounts/partials/_auth_form.html" with form=form form_action=request.path submit_label="Login" form_id="login-form" is_login=True is_signup=False %}
+
+      {# Divider #}
+      <div class="flex items-center gap-3 my-6">
+        <div class="flex-1 h-px bg-sand"></div>
+        <span class="text-xs text-brand-muted/60 font-medium">or</span>
+        <div class="flex-1 h-px bg-sand"></div>
+      </div>
+
+      {# Switch to signup #}
+      <p class="text-center text-sm text-brand-muted">
+        Don't have an account?
+        <a href="{% url 'accounts.signup' %}"
+           class="text-gold-dim hover:text-gold font-semibold transition ml-1">
+          Create one →
+        </a>
+      </p>
+
+      {# Security note #}
+      <div class="mt-6 flex items-center justify-center gap-2 text-xs text-brand-muted/60">
+        <span>🔒</span>
+        <span>Secure, encrypted connection</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

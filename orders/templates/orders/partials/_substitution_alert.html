@@ -1,0 +1,35 @@
+{% if pending_substitution %}
+<div id="substitution-alert"
+     class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 mb-4"
+     hx-get="{% url 'orders.substitution_partial' order.id %}"
+     hx-trigger="every 10s"
+     hx-target="#substitution-alert"
+     hx-swap="outerHTML">
+  <div class="flex items-start gap-3 mb-3">
+    <span class="text-xl shrink-0">⚡</span>
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-1">Substitution Request</p>
+      <p class="text-sm text-amber-900">
+        Runner suggests <strong>{{ pending_substitution.suggested_item }}</strong>
+        instead of <span class="line-through opacity-60">{{ pending_substitution.original_item }}</span>.
+      </p>
+    </div>
+  </div>
+  <div class="flex gap-2">
+    <button type="button"
+            hx-post="{% url 'orders.approve_substitution' pending_substitution.id %}"
+            hx-target="#substitution-alert"
+            hx-swap="outerHTML"
+            class="flex-1 bg-green-600 text-white font-semibold py-2.5 rounded-xl text-sm hover:bg-green-700 transition">
+      ✓ Approve
+    </button>
+    <button type="button"
+            hx-post="{% url 'orders.decline_substitution' pending_substitution.id %}"
+            hx-target="#substitution-alert"
+            hx-swap="outerHTML"
+            class="flex-1 bg-red-100 text-red-700 border border-red-200 font-semibold py-2.5 rounded-xl text-sm hover:bg-red-200 transition">
+      ✕ Decline
+    </button>
+  </div>
+</div>
+{% endif %}

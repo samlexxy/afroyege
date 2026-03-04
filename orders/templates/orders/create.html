@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Create Errand{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-md mx-auto px-4 py-8">
+
+  <div class="mb-6">
+    <a href="{% url 'orders.list' %}" class="text-brand-muted text-sm hover:text-brand transition inline-flex items-center gap-1.5 mb-3">
+      ← My Orders
+    </a>
+    <h1 class="font-syne font-extrabold text-2xl text-brand">Create Errand</h1>
+    <p class="text-brand-muted text-sm mt-0.5">Fill in the details — a verified runner will pick it up.</p>
+  </div>
+
+  <form id="create-errand-form" method="POST" action="{% url 'orders.create' %}"
+        enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+      {% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    {# SECTION: Delivery #}
+    <div class="bg-cream border border-sand rounded-2xl p-5 space-y-4">
+      <h2 class="font-syne font-bold text-base text-brand flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-gold/15 flex items-center justify-center">📍</span>
+        Delivery
+      </h2>
+      <div class="space-y-1">
+        <label for="{{ form.delivery_address.id_for_label }}" class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">Delivery Address</label>
+        {{ form.delivery_address }}
+        {% if form.delivery_address.errors %}<p class="text-xs text-red-600">{{ form.delivery_address.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div class="space-y-1">
+        <label for="{{ form.delivery_postcode.id_for_label }}" class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">Postcode</label>
+        {{ form.delivery_postcode }}
+        {% if form.delivery_postcode.errors %}<p class="text-xs text-red-600">{{ form.delivery_postcode.errors|join:", " }}</p>{% endif %}
+      </div>
+    </div>
+
+    {# SECTION: Stores #}
+    <div class="bg-cream border border-sand rounded-2xl p-5 space-y-4">
+      <h2 class="font-syne font-bold text-base text-brand flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-gold/15 flex items-center justify-center">🏪</span>
+        Preferred Store(s)
+      </h2>
+      <div class="space-y-1">
+        <label for="{{ form.preferred_store_1.id_for_label }}" class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">Store Name</label>
+        {{ form.preferred_store_1 }}
+        {% if form.preferred_store_1.errors %}<p class="text-xs text-red-600">{{ form.preferred_store_1.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div id="second-store-wrapper">
+        <button type="button"
+                hx-get="{% url 'orders.second_store_partial' %}"
+                hx-target="#second-store-wrapper"
+                hx-swap="innerHTML"
+                class="text-sm font-semibold text-gold-dim hover:text-gold transition">
+          + Add Second Store
+        </button>
+      </div>
+    </div>
+
+    {# SECTION: Items #}
+    <div class="bg-cream border border-sand rounded-2xl p-5 space-y-4">
+      <h2 class="font-syne font-bold text-base text-brand flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-gold/15 flex items-center justify-center">🛍</span>
+        Items
+      </h2>
+
+      <div id="items-container" class="space-y-2">
+        <div class="flex items-center gap-2" id="item-row-0">
+          <input type="text" name="items-0-name" placeholder="e.g. Organic whole milk 2L"
+                 class="flex-1 bg-white border-2 border-sand rounded-xl px-4 py-2.5 text-sm text-brand placeholder-brand-muted/50 focus:outline-none focus:border-gold transition">
+          <input type="text" name="items-0-quantity" placeholder="Qty" value="1"
+                 class="w-16 bg-white border-2 border-sand rounded-xl px-3 py-2.5 text-sm text-brand focus:outline-none focus:border-gold transition text-center">
+          <button type="button" onclick="this.closest('[id^=item-row]').remove()"
+                  class="w-8 h-8 rounded-lg border-2 border-red-200 text-red-400 hover:bg-red-50 transition flex items-center justify-center font-bold shrink-0">×</button>
+        </div>
+      </div>
+
+      <div class="flex gap-3 items-center">
+        <button type="button"
+                hx-get="{% url 'orders.add_item_row' %}"
+                hx-target="#items-container"
+                hx-swap="beforeend"
+                class="text-sm font-semibold text-gold-dim hover:text-gold transition">
+          + Add Item
+        </button>
+        <label class="ml-auto flex items-center gap-2 text-sm text-brand-muted cursor-pointer border-2 border-dashed border-sand hover:border-gold rounded-xl px-4 py-2 transition">
+          <span>📷</span> Upload photo
+          <input type="file" name="item_photo" accept="image/*" class="sr-only" multiple>
+        </label>
+      </div>
+
+      <div class="space-y-1">
+        <label for="{{ form.notes.id_for_label }}" class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">
+          Notes for Runner <span class="normal-case font-normal text-brand-muted/60">(optional)</span>
+        </label>
+        {{ form.notes }}
+      </div>
+    </div>
+
+    {# SECTION: Controls #}
+    <div class="bg-cream border border-sand rounded-2xl p-5 space-y-4">
+      <h2 class="font-syne font-bold text-base text-brand flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-gold/15 flex items-center justify-center">⚙️</span>
+        Controls
+      </h2>
+
+      <div class="space-y-1">
+        <label for="{{ form.spending_limit.id_for_label }}" class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">Spending Limit (£)</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted font-semibold pointer-events-none">£</span>
+          {{ form.spending_limit }}
+        </div>
+        {% if form.spending_limit.errors %}<p class="text-xs text-red-600">{{ form.spending_limit.errors|join:", " }}</p>{% endif %}
+        <p class="text-xs text-brand-muted/70">Your runner cannot exceed this amount.</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">Substitution Preference</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="cursor-pointer">
+            <input type="radio" name="substitution_mode" value="ALLOW_SUBSTITUTE" class="peer sr-only">
+            <div class="peer-checked:border-gold peer-checked:bg-gold-faint peer-checked:text-gold-dim border-2 border-sand rounded-xl p-3 text-center text-xs font-semibold text-brand-muted transition hover:border-gold/50">🔄 Allow</div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="substitution_mode" value="ASK_FIRST" class="peer sr-only" checked>
+            <div class="peer-checked:border-gold peer-checked:bg-gold-faint peer-checked:text-gold-dim border-2 border-sand rounded-xl p-3 text-center text-xs font-semibold text-brand-muted transition hover:border-gold/50">💬 Ask First</div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="substitution_mode" value="NO_SUBSTITUTE" class="peer sr-only">
+            <div class="peer-checked:border-gold peer-checked:bg-gold-faint peer-checked:text-gold-dim border-2 border-sand rounded-xl p-3 text-center text-xs font-semibold text-brand-muted transition hover:border-gold/50">🚫 Never</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    {# SECTION: Summary #}
+    <div class="bg-brand rounded-2xl p-5 text-white">
+      <h2 class="font-syne font-bold text-base mb-4 flex items-center gap-2"><span class="text-gold">📋</span> Order Summary</h2>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-white/55">Subtotal</span><span>Calculated at checkout</span></div>
+        <div class="flex justify-between"><span class="text-white/55">Delivery Fee</span><span>TBC</span></div>
+        <div class="h-px bg-white/10 my-2"></div>
+        <div class="flex justify-between font-syne font-bold text-base">
+          <span>Spending Limit</span>
+          <span class="text-gold" id="summary-limit">{% if form.spending_limit.value %}£{{ form.spending_limit.value }}{% else %}Not set{% endif %}</span>
+        </div>
+      </div>
+      <p class="text-white/40 text-xs mt-3">Pre-authorisation may be required for the estimated total.</p>
+    </div>
+
+    <button type="submit"
+            class="w-full bg-gold text-brand font-syne font-bold py-4 rounded-2xl hover:bg-gold-dim transition text-base active:scale-[0.99] shadow-lg">
+      Submit Errand →
+    </button>
+
+  </form>
+</div>
+
+<script>
+  (function() {
+    var inp = document.getElementById('{{ form.spending_limit.id_for_label }}');
+    var lbl = document.getElementById('summary-limit');
+    if (inp && lbl) {
+      inp.addEventListener('input', function() {
+        lbl.textContent = this.value ? '£' + parseFloat(this.value).toFixed(2) : 'Not set';
+      });
+    }
+  })();
+</script>
+{% endblock %}

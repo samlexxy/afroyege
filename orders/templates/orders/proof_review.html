@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Review Proof — Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-sm mx-auto px-4 py-8">
+
+  <a href="{% url 'orders:tracking' order.id %}" class="text-brand-muted text-sm hover:text-brand transition inline-flex items-center gap-1.5 mb-5">
+    ← Back to Tracking
+  </a>
+
+  <div class="mb-6">
+    <h1 class="font-syne font-extrabold text-2xl text-brand">Review Proof of Purchase</h1>
+    <p class="text-brand-muted text-sm mt-0.5">Check everything looks correct before confirming.</p>
+  </div>
+
+  {# Proof images #}
+  <div class="bg-cream border border-sand rounded-2xl p-5 mb-4">
+    <h2 class="font-syne font-bold text-xs uppercase tracking-wider text-brand-muted mb-4">Proof Images</h2>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <div class="aspect-square bg-cream-soft rounded-xl border-2 border-sand flex items-center justify-center overflow-hidden cursor-pointer hover:border-gold transition"
+             onclick="openLightbox('{% if proof.receipt_image %}{{ proof.receipt_image.url }}{% endif %}')">
+          {% if proof.receipt_image %}
+            <img src="{{ proof.receipt_image.url }}" alt="Receipt" class="w-full h-full object-cover">
+          {% else %}
+            <span class="text-4xl opacity-30">🧾</span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-brand-muted text-center mt-1.5 font-medium">Receipt</p>
+      </div>
+      <div>
+        <div class="aspect-square bg-cream-soft rounded-xl border-2 border-sand flex items-center justify-center overflow-hidden cursor-pointer hover:border-gold transition"
+             onclick="openLightbox('{% if proof.basket_photo %}{{ proof.basket_photo.url }}{% endif %}')">
+          {% if proof.basket_photo %}
+            <img src="{{ proof.basket_photo.url }}" alt="Basket" class="w-full h-full object-cover">
+          {% else %}
+            <span class="text-4xl opacity-30">🧺</span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-brand-muted text-center mt-1.5 font-medium">Basket</p>
+      </div>
+    </div>
+    {% if proof.item_photos.all %}
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-muted mb-2">Item Photos</p>
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        {% for photo in proof.item_photos.all %}
+        <div class="w-20 h-20 rounded-xl border-2 border-sand overflow-hidden shrink-0 cursor-pointer hover:border-gold transition"
+             onclick="openLightbox('{{ photo.image.url }}')">
+          <img src="{{ photo.image.url }}" alt="Item" class="w-full h-full object-cover">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# Order details #}
+  <div class="bg-cream border border-sand rounded-2xl p-5 mb-4 space-y-3">
+    <h2 class="font-syne font-bold text-xs uppercase tracking-wider text-brand-muted">Order Details</h2>
+    <div class="flex justify-between text-sm"><span class="text-brand-muted">Store</span><span class="font-medium">{{ proof.store_name|default:order.store_name }}</span></div>
+    <div class="flex justify-between text-sm border-t border-sand pt-3"><span class="text-brand-muted">Amount Spent</span><span class="font-syne font-bold text-green-700 text-base">£{{ proof.total_amount }}</span></div>
+    <div class="flex justify-between text-sm"><span class="text-brand-muted">Spending Limit</span><span>£{{ order.spending_limit }}</span></div>
+    <div class="flex justify-between text-sm"><span class="text-brand-muted">Submitted</span><span>{{ proof.created_at|date:"D j M Y, g:ia" }}</span></div>
+  </div>
+
+  {# Auto-confirm countdown #}
+  <div class="bg-brand/5 border border-sand rounded-2xl p-4 mb-4 flex items-center gap-3">
+    <span class="text-2xl shrink-0">⏱️</span>
+    <div class="flex-1">
+      <p class="text-xs font-semibold text-brand-muted">Auto-confirms in</p>
+      <p class="font-syne font-bold text-brand text-xl" id="auto-confirm-timer">{{ auto_confirm_display|default:"5:00" }}</p>
+    </div>
+    <p class="text-xs text-brand-muted/60 text-right max-w-[130px]">Payment auto-releases if you take no action.</p>
+  </div>
+
+  {# Actions #}
+  <div class="space-y-3">
+    <form method="POST" action="{% url 'orders:confirm_purchase' order.id %}">
+      {% csrf_token %}
+      <button type="submit"
+              class="w-full bg-gold text-brand font-syne font-bold py-4 rounded-2xl hover:bg-gold-dim transition text-base">
+        ✓ Confirm Purchase
+      </button>
+    </form>
+    <a href="{% url 'disputes:create' order.id %}"
+       class="block w-full border-2 border-red-200 text-red-600 font-semibold py-3.5 rounded-2xl text-center text-sm hover:bg-red-50 transition">
+      Something's wrong — Dispute
+    </a>
+  </div>
+
+</div>
+
+{# Lightbox #}
+<div id="lightbox" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 cursor-pointer"
+     onclick="this.classList.add('hidden'); this.classList.remove('flex')">
+  <img id="lightbox-img" src="" alt="Proof image" class="max-w-full max-h-full rounded-xl object-contain">
+</div>
+
+<script>
+  function openLightbox(src) {
+    if (!src) return;
+    var lb = document.getElementById('lightbox');
+    document.getElementById('lightbox-img').src = src;
+    lb.classList.remove('hidden');
+    lb.classList.add('flex');
+  }
+  (function() {
+    var el = document.getElementById('auto-confirm-timer');
+    if (!el) return;
+    var parts = el.textContent.trim().split(':');
+    var total = parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+    setInterval(function() {
+      if (total <= 0) { el.textContent = '0:00'; return; }
+      total--;
+      var m = Math.floor(total / 60), s = total % 60;
+      el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    }, 1000);
+  })();
+</script>
+{% endblock %}
