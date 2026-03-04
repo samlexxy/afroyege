@@ -1,0 +1,44 @@
+<div id="tracking-status"
+     class="bg-cream border border-sand rounded-2xl p-5 mb-4"
+     hx-get="{% url 'orders:tracking_partial' order.id %}"
+     hx-trigger="every 15s"
+     hx-target="#tracking-status"
+     hx-swap="outerHTML">
+
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <span class="text-xs font-semibold uppercase tracking-wider text-brand-muted">Order</span>
+      <span class="font-syne font-bold text-brand ml-1">#{{ order.id }}</span>
+    </div>
+    {% if order.status not in 'completed,cancelled' %}
+    <div class="flex items-center gap-1.5 text-xs text-green-700 font-semibold">
+      <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block"></span> Live
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="flex items-start">
+    {% for step in order.get_progress_steps %}
+    <div class="flex-1 flex flex-col items-center relative text-center">
+      {% if not forloop.last %}
+      <div class="absolute top-3.5 left-1/2 w-full h-0.5 {% if step.done %}bg-gold{% else %}bg-sand{% endif %} z-0"></div>
+      {% endif %}
+      <div class="relative z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-2
+                  {% if step.active %}bg-gold text-brand ring-4 ring-gold/20
+                  {% elif step.done %}bg-green-500 text-white
+                  {% else %}bg-sand text-brand-muted{% endif %}">
+        {% if step.done %}✓{% elif step.active %}{{ step.emoji }}{% else %}{{ forloop.counter }}{% endif %}
+      </div>
+      <span class="text-xs text-brand-muted font-medium">{{ step.label }}</span>
+    </div>
+    {% empty %}
+    {# Static fallback — remove once model method is implemented #}
+    {% for data in "Placed|📝|done,Shopping|🛒|active,Delivering|🚗|upcoming,Delivered|✅|upcoming"|split:"," %}
+    <div class="flex-1 flex flex-col items-center">
+      <div class="w-7 h-7 rounded-full bg-sand text-brand-muted flex items-center justify-center text-xs font-bold mb-2">{{ forloop.counter }}</div>
+      <span class="text-xs text-brand-muted">{{ data|split:"|"|first }}</span>
+    </div>
+    {% endfor %}
+    {% endfor %}
+  </div>
+</div>

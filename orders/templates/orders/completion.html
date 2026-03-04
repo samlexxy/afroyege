@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Order Completed — #{{ order.id }}{% endblock %}
+{% block topbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#F0E8D8] flex items-start justify-center p-6 py-12">
+  <div class="w-full max-w-md">
+
+    {# Success header #}
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 rounded-full bg-green-100 border-4 border-green-500 flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg">✓</div>
+      <h1 class="font-syne font-extrabold text-3xl text-brand mb-2">Errand Completed!</h1>
+      <p class="text-brand-muted">Order <strong>#{{ order.id }}</strong> &middot; {{ order.completed_at|date:"j M Y, g:ia" }}</p>
+    </div>
+
+    {# Order summary #}
+    <div class="bg-cream border border-sand rounded-2xl p-5 mb-4 space-y-3">
+      <h2 class="font-syne font-bold text-xs uppercase tracking-wider text-brand-muted mb-1">Order Summary</h2>
+      <div class="flex justify-between text-sm"><span class="text-brand-muted">Total Spend</span><span class="font-syne font-bold text-brand text-base">£{{ order.total_spend }}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-brand-muted">Runner</span><span class="font-medium">{{ order.runner.get_full_name }}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-brand-muted">Stores visited</span><span>{{ order.store_count }}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-brand-muted">Items</span><span>{{ order.item_count }}</span></div>
+    </div>
+
+    {# Rate runner #}
+    <div class="bg-cream border border-sand rounded-2xl p-5 mb-4">
+      <h2 class="font-syne font-bold text-base text-brand text-center mb-4">Rate Your Runner</h2>
+
+      <form id="rating-form"
+            method="POST"
+            action="{% url 'orders:submit_rating' order.id %}"
+            hx-post="{% url 'orders:submit_rating' order.id %}"
+            hx-target="#rating-form"
+            hx-swap="outerHTML"
+            class="space-y-4">
+        {% csrf_token %}
+
+        {# Stars #}
+        <div class="flex justify-center gap-1" id="star-row">
+          {% for i in "12345" %}
+          <label class="cursor-pointer">
+            <input type="radio" name="rating" value="{{ forloop.counter }}" class="sr-only peer" required>
+            <span class="text-4xl transition hover:scale-110 peer-checked:scale-110 select-none text-sand peer-checked:text-gold hover:text-gold-light star-btn">★</span>
+          </label>
+          {% endfor %}
+        </div>
+
+        {# Attribute chips #}
+        <div class="flex flex-wrap gap-2 justify-center">
+          {% for attr in "On time,Good comms,Accurate,Friendly,Helpful,Fast"|split:"," %}
+          <label class="cursor-pointer">
+            <input type="checkbox" name="attributes" value="{{ attr }}" class="peer sr-only">
+            <span class="inline-block px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-sand text-brand-muted transition peer-checked:border-gold peer-checked:bg-gold-faint peer-checked:text-gold-dim hover:border-gold/50">
+              {{ attr }}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+
+        {# Written feedback #}
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-brand-muted">
+            Feedback <span class="normal-case font-normal text-brand-muted/60">(optional)</span>
+          </label>
+          <textarea name="feedback" rows="3" placeholder="Tell us about your experience…"
+                    class="w-full bg-white border-2 border-sand rounded-xl px-4 py-3 text-sm text-brand placeholder-brand-muted/50 focus:outline-none focus:border-gold transition resize-none"></textarea>
+        </div>
+
+        <button type="submit"
+                class="w-full bg-gold text-brand font-syne font-bold py-3.5 rounded-xl hover:bg-gold-dim transition flex items-center justify-center gap-2">
+          <span class="htmx-indicator"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg></span>
+          Submit Rating
+        </button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="{% url 'disputes:create' order.id %}" class="text-xs text-red-400 hover:text-red-600 transition">
+          Report an issue with this order
+        </a>
+      </div>
+    </div>
+
+    {# CTAs #}
+    <div class="space-y-2">
+      <a href="{% url 'orders:create' %}"
+         class="block w-full border-2 border-gold text-gold-dim font-syne font-bold py-3.5 rounded-xl text-center hover:bg-gold hover:text-brand transition">
+        Order Again
+      </a>
+      <a href="{% url 'orders:list' %}"
+         class="block w-full text-center text-sm text-brand-muted hover:text-brand transition py-2">
+        ← Back to My Orders
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Highlight stars on select
+  document.querySelectorAll('#star-row input[type=radio]').forEach(function(radio, i, all) {
+    radio.addEventListener('change', function() {
+      document.querySelectorAll('#star-row .star-btn').forEach(function(star, j) {
+        star.classList.toggle('text-gold', j <= i);
+        star.classList.toggle('text-sand', j > i);
+      });
+    });
+  });
+</script>
+{% endblock %}

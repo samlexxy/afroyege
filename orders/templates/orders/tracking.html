@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} — Tracking{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-sm mx-auto px-4 py-8">
+
+  <a href="{% url 'orders:list' %}" class="text-brand-muted text-sm hover:text-brand transition inline-flex items-center gap-1.5 mb-5">
+    ← My Orders
+  </a>
+
+  {# Status Progress — auto-polls every 15s #}
+  <div id="tracking-status"
+       class="bg-cream border border-sand rounded-2xl p-5 mb-4"
+       hx-get="{% url 'orders:tracking_partial' order.id %}"
+       hx-trigger="every 15s"
+       hx-target="#tracking-status"
+       hx-swap="outerHTML">
+    {% include "orders/partials/_tracking_status.html" %}
+  </div>
+
+  {# Runner card #}
+  {% if order.runner %}
+  <div class="bg-cream border border-sand rounded-2xl p-5 mb-4 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full bg-gold flex items-center justify-center font-syne font-bold text-brand text-lg shrink-0">
+      {{ order.runner.get_initials }}
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="font-syne font-bold text-brand">{{ order.runner.get_full_name }}</div>
+      <div class="flex items-center gap-1 text-sm text-brand-muted">
+        <span class="text-gold">★</span>
+        {{ order.runner.runner_profile.average_rating|floatformat:1 }}
+        &middot; {{ order.runner.runner_profile.total_jobs }} jobs
+      </div>
+    </div>
+    <div class="flex gap-2 shrink-0">
+      <a href="tel:{{ order.runner.phone }}"
+         class="w-10 h-10 rounded-full border-2 border-sand hover:border-gold transition flex items-center justify-center">📞</a>
+      <button type="button"
+              onclick="document.getElementById('chat-panel').scrollIntoView({behavior:'smooth'})"
+              class="w-10 h-10 rounded-full border-2 border-sand hover:border-gold transition flex items-center justify-center">💬</button>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Substitution alert — polls every 10s #}
+  <div id="substitution-alert"
+       hx-get="{% url 'orders:substitution_partial' order.id %}"
+       hx-trigger="every 10s"
+       hx-target="#substitution-alert"
+       hx-swap="outerHTML">
+    {% include "orders/partials/_substitution_alert.html" %}
+  </div>
+
+  {# Estimated delivery #}
+  {% if order.status in 'shopping,delivering' %}
+  <div class="bg-brand rounded-2xl p-5 mb-4 text-center">
+    <p class="text-white/55 text-xs uppercase tracking-wider font-semibold mb-2">Estimated Delivery</p>
+    <div class="font-syne font-extrabold text-gold text-4xl tracking-wider">
+      {{ estimated_delivery_display|default:"—" }}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Chat panel — polls every 5s #}
+  <div class="bg-cream border border-sand rounded-2xl mb-4 overflow-hidden" id="chat-panel">
+    <div class="bg-brand/5 border-b border-sand px-4 py-3 flex items-center justify-between">
+      <span class="font-syne font-bold text-sm text-brand">Chat</span>
+    </div>
+    <div id="chat-messages"
+         class="h-44 overflow-y-auto p-4 space-y-3 flex flex-col"
+         hx-get="{% url 'orders:chat_partial' order.id %}"
+         hx-trigger="every 5s"
+         hx-target="#chat-messages"
+         hx-swap="innerHTML">
+      {% include "orders/partials/_chat_messages.html" %}
+    </div>
+    <form class="border-t border-sand flex items-center gap-2 p-3"
+          hx-post="{% url 'orders:send_message' order.id %}"
+          hx-target="#chat-messages"
+          hx-swap="innerHTML"
+          hx-on::after-request="this.reset()">
+      {% csrf_token %}
+      <input type="text" name="message" placeholder="Type a message…" required
+             class="flex-1 bg-white border-2 border-sand rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-gold transition">
+      <button type="submit" class="bg-gold text-brand font-bold px-4 py-2 rounded-xl text-sm hover:bg-gold-dim transition">
+        Send
+      </button>
+    </form>
+  </div>
+
+  {# Proof review CTA — shown when runner marks delivered #}
+  {% if order.status == 'delivered' %}
+  <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 mb-4">
+    <p class="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-1">Action Required</p>
+    <p class="text-sm text-amber-800 mb-3">Your runner has marked this as delivered. Please review the proof of purchase.</p>
+    <a href="{% url 'orders:proof_review' order.id %}"
+       class="block w-full bg-gold text-brand font-syne font-bold py-3 rounded-xl text-center hover:bg-gold-dim transition">
+      Review Proof of Purchase →
+    </a>
+  </div>
+  {% endif %}
+
+  {# Dispute link #}
+  {% if order.status not in 'completed,cancelled' %}
+  <div class="text-center mt-2">
+    <a href="{% url 'disputes:create' order.id %}" class="text-sm text-red-400 hover:text-red-600 transition font-medium">
+      Something wrong? Dispute this order
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

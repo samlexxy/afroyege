@@ -1,0 +1,64 @@
+{% if messages %}
+  {% for message in messages %}
+    <div
+      role="alert"
+      data-message
+      class="
+        flex items-start gap-3 px-4 py-3 rounded-xl shadow-card text-sm font-medium
+        border backdrop-blur-sm
+        {% if message.tags == 'error' or message.tags == 'danger' %}
+          bg-red-50 border-red-200 text-red-800
+        {% elif message.tags == 'success' %}
+          bg-green-50 border-green-200 text-green-800
+        {% elif message.tags == 'warning' %}
+          bg-amber-50 border-amber-200 text-amber-800
+        {% else %}
+          bg-cream border-sand text-brand-mid
+        {% endif %}
+        animate-[slideIn_0.25s_ease]
+      "
+      x-data="{ show: true }"
+      style="animation: slideIn 0.25s ease both;"
+    >
+      {# Icon #}
+      <span class="text-base mt-px shrink-0">
+        {% if message.tags == 'error' or message.tags == 'danger' %}❌
+        {% elif message.tags == 'success' %}✅
+        {% elif message.tags == 'warning' %}⚠️
+        {% else %}ℹ️{% endif %}
+      </span>
+
+      {# Message text #}
+      <span class="flex-1">{{ message }}</span>
+
+      {# Dismiss button #}
+      <button
+        type="button"
+        onclick="this.closest('[data-message]').remove()"
+        class="text-current opacity-40 hover:opacity-80 transition text-lg leading-none ml-1"
+        aria-label="Dismiss"
+      >×</button>
+    </div>
+
+    {# Auto-dismiss after 5s #}
+    <script>
+      (function () {
+        var msgs = document.querySelectorAll('[data-message]');
+        var last = msgs[msgs.length - 1];
+        if (last) setTimeout(function () {
+          last.style.transition = 'opacity 0.4s, transform 0.4s';
+          last.style.opacity = '0';
+          last.style.transform = 'translateX(1rem)';
+          setTimeout(function () { last.remove(); }, 400);
+        }, 5000);
+      })();
+    </script>
+  {% endfor %}
+{% endif %}
+
+<style>
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(1rem); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+</style>

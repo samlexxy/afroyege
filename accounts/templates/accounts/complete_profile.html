@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Complete profile · Afroyege{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-lg rounded-2xl border bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-semibold">Complete your profile</h1>
+    <p class="mt-1 text-sm text-gray-600">This helps us match orders and deliveries correctly.</p>
+
+    <form method="post" class="mt-6 space-y-4">
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div>
+          <label class="mb-1 block text-sm font-medium">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <button class="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-white hover:bg-gray-800">
+        Save and continue
+      </button>
+    </form>
+
+    <script>
+      document.querySelectorAll("input, textarea, select").forEach(el => {
+        el.classList.add("w-full","rounded-lg","border","px-3","py-2","bg-white","focus:outline-none","focus:ring-2");
+      });
+    </script>
+  </div>
+{% endblock %}
